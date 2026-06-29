@@ -1,87 +1,79 @@
-class Account:
-    def __init__(self, username, password, account_id, full_name, balance=0.0):
-        self.username = username
-        self.password = password
-        self.account_id = account_id
-        self.full_name = full_name
+class BankAccount:
+    def __init__(self, account_number, owner, balance=0):
+        self.account_number = account_number
+        self.owner = owner
         self.balance = balance
 
-    def authenticate(self, username, password):
-        return self.username == username and self.password == password
-
-    def display_info(self):
-        print("\nAccount Details")
-        print(f"Name: {self.full_name}")
-        print(f"Username: {self.username}")
-        print(f"Account ID: {self.account_id}")
-        print(f"Balance: ${self.balance:.2f}")
-
     def deposit(self, amount):
-        if amount > 0:
-            self.balance += amount
-            print(f"Deposited: ${amount:.2f}")
-        else:
-            print("Deposit amount must be positive.")
+        self.balance += amount
+        print(f"{self.owner} deposited {amount}. New balance: {self.balance}")
 
     def withdraw(self, amount):
-        if 0 < amount <= self.balance:
+        if amount <= self.balance:
             self.balance -= amount
-            print(f"Withdrew: ${amount:.2f}")
+            print(f"{self.owner} withdrew {amount}. New balance: {self.balance}")
         else:
-            print("Insufficient funds or invalid withdrawal amount.")
+            print("Insufficient funds!")
+
+    def check_balance(self):
+        print(f"Account {self.account_number} ({self.owner}) balance: {self.balance}")
 
 
-class BankingSystem:
+class Bank:
     def __init__(self):
         self.accounts = {}
+        self.users = {}  # store login info
 
-    def create_account(self, username, password, account_id, full_name, balance=0.0):
-        if username in self.accounts:
-            print("Username already exists.")
+    def create_account(self, account_number, owner, username, password, code, balance=0):
+        if account_number in self.accounts:
+            print("Account number already exists!")
+        else:
+            self.accounts[account_number] = BankAccount(account_number, owner, balance)
+            self.users[username] = {"password": password, "code": code, "account": account_number}
+            print(f"Account created for {owner} with number {account_number}")
+
+    def login(self, username, password, code):
+        user = self.users.get(username)
+        if user and user["password"] == password and user["code"] == code:
+            print("Login successful!")
+            return self.accounts[user["account"]]
+        else:
+            print("Login failed!")
             return None
 
-        account = Account(username, password, account_id, full_name, balance)
-        self.accounts[username] = account
-        print("Account created successfully.")
-        return account
 
-    def login(self, username, password):
-        account = self.accounts.get(username)
-        if account and account.authenticate(username, password):
-            print("Login successful.")
-            return account
-        print("Invalid username or password.")
-        return None
+# --- Program Flow ---
+bank = Bank()
+bank.create_account(101, "Huzaifa", "huzaifa", "1234", "9999", 1000)
+bank.create_account(102, "Ali", "ali", "abcd", "8888", 500)
 
+# Login
+username = input("Enter username: ")
+password = input("Enter password: ")
+code = input("Enter security code: ")
 
-if __name__ == "__main__":
-    bank = BankingSystem()
+account = bank.login(username, password, code)
 
-    # Placeholder account example
-    bank.create_account(
-        username="Huzaifa Faisal",
-        password="HuZ@1F$",
-        account_id="ACC-1001",
-        full_name="Huzaifa Faisal",
-        balance=1000.0,
-    )
+if account:
+    while True:
+        print("\n--- Banking Menu ---")
+        print("1. Deposit")
+        print("2. Withdraw")
+        print("3. Check Balance")
+        print("4. Exit")
 
-    account = bank.login("Huzaifa Faisal", "HuZ@1F$")
-    if account:
-        account.display_info()
+        choice = input("Choose an option: ")
 
-        try:
-            deposit_amount = float(input("Enter deposit amount: "))
-            account.deposit(deposit_amount)
-        except ValueError:
-            print("Invalid deposit amount.")
-
-        try:
-            withdraw_amount = float(input("Enter withdrawal amount: "))
-            account.withdraw(withdraw_amount)
-        except ValueError:
-            print("Invalid withdrawal amount.")
-
-        account.display_info()
-    else:
-        print("Login failed. Please try again.")
+        if choice == "1":
+            amt = int(input("Enter amount to deposit: "))
+            account.deposit(amt)
+        elif choice == "2":
+            amt = int(input("Enter amount to withdraw: "))
+            account.withdraw(amt)
+        elif choice == "3":
+            account.check_balance()
+        elif choice == "4":
+            print("Goodbye!")
+            break
+        else:
+            print("Invalid choice!")
